@@ -1,8 +1,131 @@
-import 'package:sqflite/sql.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+import 'dart:async';
 
 final String nomeBancoDados = "banco_dados_db";
 final String livroTabela = "TbLivro";
 final String codigoColumn = "codigo";
-final String nomeColmn = "nome";
+final String nomeColumn = "nome";
 final String editoraColumn = "editora";
 final String anoColumn = "ano";
+
+class Livro {
+  int codigo, ano;
+  String nome, editora;
+
+  Livro() {}
+
+  Livro.fromMap(Map map) {
+    codigo = map[codigoColumn];
+    nome = map[nomeColumn];
+    editora = map[editoraColumn];
+    ano = map[anoColumn];
+  }
+
+  Map toMap() {
+    Map<String, dynamic> map = {
+      codigoColumn: codigo,
+      nomeColumn: nome,
+      editoraColumn: editora,
+      anoColumn: ano,
+    };
+
+    if (codigo != null) map[codigoColumn] = codigo;
+
+    return map;
+  }
+
+  @override
+  String toString() {
+    return "Livro: (Cod: $codigo, Nome: $nome, editora: $editora, Ano: $ano)";
+  }
+}
+
+class LivroHelper {
+  static final LivroHelper _instance = LivroHelper.internal();
+
+  factory LivroHelper() => _instance;
+
+  LivroHelper.internal();
+
+  Database _db;
+
+  Future<Database> get db async {
+    if (_db == null) _db = await initDb();
+    return _db;
+  }
+
+  Future<Database> initDb() async {
+    final path = await getDatabasesPath();
+    final caminhoBanco = join(path, nomeBancoDados);
+
+    return await openDatabase(caminhoBanco, version: 1,
+        onCreate: (Database db, int newVersion) async {
+      await db.execute("CREATE TABLE $livroTabela "
+          "($codigoColumn INTEGER PRIMARY KEY,"
+          "$nomeColumn TEXT,"
+          "$editoraColumn TEXT,"
+          "$anoColumn INTEGER)");
+    });
+  }
+
+  Future<Livro> inserir(Livro livro) async {
+    Database dbLivro = await db;
+    livro.codigo = await dbLivro.insert(livroTabela, livro.toMap());
+
+    return livro;
+  }
+
+  Future<int> alterar(Livro livro) async {
+    Database dbLivro = await db;
+
+    return await dbLivro.update(livroTabela, livro.toMap(),
+        where: "$codigoColumn = ?", whereArgs: [livro.codigo]);
+  }
+
+  Future<int> apagar(int codigo) async {
+    Database dbLivro = await db;
+
+    return await dbLivro
+        .delete(livroTabela, where: "$codigoColumn = ?", whereArgs: [codigo]);
+  }
+
+  Future<List> getTodos() async {
+    Database dbLivro = await db;
+
+    List listMap = await dbLivro.rawQuery("SELECT * FROM $livroTabela");
+
+    List<Livro> listaLivro = List();
+
+    for (Map m in listMap) listaLivro.add(Livro.fromMap(m));
+
+    return listaLivro;
+  }
+
+  Future<Livro> getLivro(int codigo) async {
+    Database dbLivro = await db;
+
+    List<Map> maps = await dbLivro.query(livroTabela,
+        columns: [codigoColumn, nomeColumn, editoraColumn, anoColumn],
+        where: "$codigoColumn = ?",
+        whereArgs: [codigo]);
+
+    if (maps.length > 0)
+      return Livro.fromMap(maps.first);
+    else
+      return null;
+  }
+
+  Future<int> getTotal() async {
+    Database dbLivro = await db;
+
+    return Sqflite.firstIntValue(
+        await dbLivro.rawQuery("SELECT COUNT(*) FROM $livroTabela"));
+  }
+
+  Future close() async {
+    Database dbLivro = await db;
+    dbLivro.close();
+    dbLivro.close();
+  }
+}
