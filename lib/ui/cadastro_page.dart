@@ -84,17 +84,16 @@ class _CadastroPageState extends State<CadastroPage> {
     if (nomeController.text.isEmpty) {
       Funcoes()
           .mostrarMensagenm(context, "Atenção", "Digite o nome do Livro!!!");
-
-      Livro livro = Livro();
-      livro.nome = nomeController.text;
-      livro.editora = editoraController.text;
-      livro.ano = int.parse(anoController.text);
-
-      livroHelper.inserir(livro);
-
-      Navigator.pop(context);
-
       return;
     }
+
+    Livro livro = Livro();
+    livro.nome = nomeController.text;
+    livro.editora = editoraController.text;
+    livro.ano = anoController.text.isNotEmpty ? int.parse(anoController.text) : null;
+
+    livroHelper.inserir(livro);
+
+    Navigator.pop(context);
   }
 }
