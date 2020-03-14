@@ -126,6 +126,5 @@ class LivroHelper {
   Future close() async {
     Database dbLivro = await db;
     dbLivro.close();
-    dbLivro.close();
   }
 }
