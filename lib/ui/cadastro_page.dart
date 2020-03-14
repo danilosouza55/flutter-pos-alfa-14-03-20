@@ -1,3 +1,4 @@
+import 'package:aula140320/funcoes.dart';
 import 'package:aula140320/helper/livro_helper.dart';
 import 'package:flutter/material.dart';
 
@@ -31,15 +32,15 @@ class _CadastroPageState extends State<CadastroPage> {
             criarCampo("Nome", nomeController, TextInputType.text),
             criarCampo("Editora", editoraController, TextInputType.text),
             criarCampo("Ano", anoController, TextInputType.number),
-            criarBotao("Salvar", Colors.green, Icons.save, Colors.white, salvarLivro)
+            criarBotao(
+                "Salvar", Colors.green, Icons.save, Colors.white, salvarLivro)
           ],
         ),
       ),
     );
   }
 
-  Widget criarCampo(String texto, TextEditingController c,
-      TextInputType ty) {
+  Widget criarCampo(String texto, TextEditingController c, TextInputType ty) {
     return Container(
       padding: EdgeInsets.all(10),
       child: TextField(
@@ -49,13 +50,13 @@ class _CadastroPageState extends State<CadastroPage> {
         decoration: InputDecoration(
             labelText: texto,
             labelStyle: TextStyle(color: Colors.black),
-            border: OutlineInputBorder()
-        ),
+            border: OutlineInputBorder()),
       ),
     );
   }
 
-  Widget criarBotao(String texto, Color corBotao, IconData icone, Color corTexto, Function f){
+  Widget criarBotao(String texto, Color corBotao, IconData icone,
+      Color corTexto, Function f) {
     return Padding(
       padding: EdgeInsets.fromLTRB(60, 10, 60, 0),
       child: RaisedButton(
@@ -63,17 +64,37 @@ class _CadastroPageState extends State<CadastroPage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Icon(icone, size: 26, color: corTexto,),
-            Text(texto, style: TextStyle(
-              fontSize: 22, color: corTexto
-            ),)
+            Icon(
+              icone,
+              size: 26,
+              color: corTexto,
+            ),
+            Text(
+              texto,
+              style: TextStyle(fontSize: 22, color: corTexto),
+            )
           ],
-        ), onPressed: f,
+        ),
+        onPressed: f,
       ),
     );
   }
 
-  void salvarLivro(){
+  void salvarLivro() {
+    if (nomeController.text.isEmpty) {
+      Funcoes()
+          .mostrarMensagenm(context, "Atenção", "Digite o nome do Livro!!!");
 
+      Livro livro = Livro();
+      livro.nome = nomeController.text;
+      livro.editora = editoraController.text;
+      livro.ano = int.parse(anoController.text);
+
+      livroHelper.inserir(livro);
+
+      Navigator.pop(context);
+
+      return;
+    }
   }
 }
