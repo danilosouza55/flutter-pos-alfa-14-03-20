@@ -3,6 +3,10 @@ import 'package:aula140320/helper/livro_helper.dart';
 import 'package:flutter/material.dart';
 
 class CadastroPage extends StatefulWidget {
+  final Livro _livroData;
+
+  CadastroPage(this._livroData);
+
   @override
   _CadastroPageState createState() => _CadastroPageState();
 }
@@ -15,12 +19,23 @@ class _CadastroPageState extends State<CadastroPage> {
   final anoController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    if (widget._livroData != null) {
+      nomeController.text = widget._livroData.nome;
+      editoraController.text = widget._livroData.editora;
+      anoController.text =
+      widget._livroData.ano == null ? "" : widget._livroData.ano.toString();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black,
         title: Text(
-          "Cadastro de Livros",
+          widget._livroData == null ? "Cadastro de Livros" : "Editar o Livro",
           style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
@@ -33,7 +48,8 @@ class _CadastroPageState extends State<CadastroPage> {
             criarCampo("Editora", editoraController, TextInputType.text),
             criarCampo("Ano", anoController, TextInputType.number),
             criarBotao(
-                "Salvar", Colors.green, Icons.save, Colors.white, salvarLivro)
+                "Salvar", Colors.green, Icons.save, Colors.white, salvarLivro),
+            criarBotaoExcluir(),
           ],
         ),
       ),
@@ -80,6 +96,32 @@ class _CadastroPageState extends State<CadastroPage> {
     );
   }
 
+  Widget criarBotaoExcluir() {
+    if (widget._livroData != null) {
+      return criarBotao(
+          "Excluir", Colors.red[900], Icons.delete_outline, Colors.white,
+          excluirLivro);
+    }
+    else {
+      return Container();
+    }
+  }
+
+  void excluirLivro() {
+    Funcoes().mostrarPergunta(
+        context,
+        "Atenção",
+        "Deseja realmente excluir o livro?",
+        "Sim",
+        "Não",
+        confirmarExclusaoLivro, () {});
+  }
+
+  void confirmarExclusaoLivro() {
+    livroHelper.apagar(widget._livroData.codigo);
+    Navigator.pop(context);
+  }
+
   void salvarLivro() {
     if (nomeController.text.isEmpty) {
       Funcoes()
@@ -90,9 +132,15 @@ class _CadastroPageState extends State<CadastroPage> {
     Livro livro = Livro();
     livro.nome = nomeController.text;
     livro.editora = editoraController.text;
-    livro.ano = anoController.text.isNotEmpty ? int.parse(anoController.text) : null;
+    livro.ano =
+    anoController.text.isNotEmpty ? int.parse(anoController.text) : null;
 
-    livroHelper.inserir(livro);
+    if (widget._livroData != null) {
+      livro.codigo = widget._livroData.codigo;
+      livroHelper.alterar(livro);
+    } else {
+      livroHelper.inserir(livro);
+    }
 
     Navigator.pop(context);
   }

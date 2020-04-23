@@ -34,7 +34,7 @@ class _HomePageState extends State<HomePage> {
               size: 32,
             ),
             onPressed: () {
-              abrirCadastroLivro(context);
+              abrirCadastroLivro(context, null);
             },
           )
         ],
@@ -85,51 +85,100 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget criarListagem(BuildContext context, AsyncSnapshot snapshot) {
-    return Card(
-      color: Color(0xFFCCCCCC),
+    return Container(
+      color: Color(0xffcccccc),
       child: ListView.builder(
-          scrollDirection: Axis.vertical,
-          itemCount: snapshot.data.length,
-          itemBuilder: (context, index) {
-            return criarItemLista(snapshot.data[index] as Livro);
-          }),
+        padding: EdgeInsets.all(4),
+        scrollDirection: Axis.vertical,
+        itemCount: snapshot.data.length,
+        itemBuilder: (context, index) {
+          return Dismissible(
+            key: UniqueKey(),
+            child: criarItemLista(snapshot.data[index] as Livro),
+            direction: DismissDirection.endToStart,
+            background: Container(
+              color: Colors.red,
+              alignment: Alignment(1, 0),
+              child: Text(
+                "Excluir Livro",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            onDismissed: (DismissDirection direction) {
+              LivroHelper().apagar((snapshot.data[index] as Livro).codigo);
+            },
+            confirmDismiss: (direction) {
+              return showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: Text("Atenção"),
+                      content: Text("Deseja excluir o livro?"),
+                      actions: <Widget>[
+                        FlatButton(
+                          child: Text("Sim"),
+                          onPressed: () {
+                            Navigator.of(context).pop(true);
+                          },
+                        ),
+                        FlatButton(
+                          child: Text("Não"),
+                          onPressed: () {
+                            Navigator.of(context).pop(false);
+                          },
+                        )
+                      ],
+                    );
+                  }
+              );
+            },
+          );
+        },
+      ),
     );
   }
 
   Widget criarItemLista(Livro livro) {
-    return Card(
-      color: Colors.white,
-      child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Row(
-            children: <Widget>[
-              Expanded(
-                  child:
-                  Text(
+    return GestureDetector(
+      child: Card(
+        color: Colors.white,
+        child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
                     livro.nome ?? "",
                     style: TextStyle(fontSize: 18, color: Colors.black),
                   ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: <Widget>[
-                  Text(
-                    livro.editora ?? "",
-                    style: TextStyle(fontSize: 14, color: Colors.black),
-                  ),
-                  Text(
-                    livro.ano == null ? "" : livro.ano.toString(),
-                    style: TextStyle(fontSize: 14, color: Colors.black),
-                  ),
-                ],
-              )
-            ],
-          )),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: <Widget>[
+                    Text(
+                      livro.editora ?? "",
+                      style: TextStyle(fontSize: 14, color: Colors.black),
+                    ),
+                    Text(
+                      livro.ano == null ? "" : livro.ano.toString(),
+                      style: TextStyle(fontSize: 14, color: Colors.black),
+                    ),
+                  ],
+                )
+              ],
+            )),
+      ),
+      onTap: () {
+        abrirCadastroLivro(context, livro);
+      },
     );
   }
 
-  void abrirCadastroLivro(BuildContext context) {
+  void abrirCadastroLivro(BuildContext context, Livro livro) {
     Navigator.push(
-        context, MaterialPageRoute(builder: (context) => CadastroPage()));
+        context, MaterialPageRoute(builder: (context) => CadastroPage(livro)));
   }
 }
